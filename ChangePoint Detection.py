@@ -1,15 +1,25 @@
+import os
 import numpy as np
 from scipy import linalg
 from numpy import matrix
 import matplotlib.pyplot as plt
 
+path = 'D:\\gearS2\\rate.csv'
+doc = open(path, 'rb').read()
+
 y = []
-for i in range(1, 869):
-    y.append(i)
-N = len(y)
+k = 1 + 16*108
+while k < len(doc):
+    y.append(doc[k])
+    k = k + 16
+
+q = 121
+p = 120
+Q = q - p # =
 m = 200
 M = m // 2
 K = m - M + 1
+N = len(y) - (q - M)
 # [n+1,n+m]
 count = 0
 X = {} # trajectory matrix = base matrix
@@ -39,15 +49,14 @@ for n in range(0, N - m + 1):
 
     l = 9
     I1 = range(0, l)
+    Us = matrix(U.T[ : 9]).T
 
     #newXs1 = np.zeros((m, K))
     #for i in I1:
     #    newXs1 = newXs1 + Xs[i]
     #print(newXs1.shape)
 
-    q = 63
-    p = 60
-    Q = q - p # = 3
+
     TM[n] = np.zeros((M, Q), dtype=int)
     for i in range(n + p + 1, n + p + M + 1):
         count = i
@@ -56,17 +65,38 @@ for n in range(0, N - m + 1):
             count += 1
     D[n] = 0
     for j in range(p + 1, q + 1):
-        D[n] += np.dot((X[n].T[j]).T, X[n].T[j]) - np.dot(np.dot(np.dot((X[n].T[j]).T, U), U.T), X[n].T[j])
+        D[n] += np.dot((TM[n].T[j - (p + 1)]).T, TM[n].T[j - (p + 1)]) - \
+                np.dot(np.dot(np.dot((TM[n].T[j - (p + 1)]).T, Us), Us.T), TM[n].T[j - (p + 1)])
     D_[n] = D[n] / ( M * Q )
-    m_ = n # e largest value of m <= n so
+    n_ = n # e largest value of m <= n so
 #that the hypothesis of no change is accepted
     D_Other = 0
     for j in range(0, K):
-        D_Other += np.dot((X[m_].T[j]).T, X[m_].T[j]) - np.dot(np.dot(np.dot((X[m_].T[j]).T, U), U.T), X[m_].T[j])
+        D_Other += np.dot((X[n_].T[j]).T, X[n_].T[j]) - np.dot(np.dot(np.dot((X[n_].T[j]).T, Us), Us.T), X[n_].T[j])
     u[n] = D_Other / ( M * Q )
+
     S[n] = D_[n] / u[n]
     #print(D[n])
 
 #print(TM[0])
-print(X[0])
+#print(D)
+#print(X[0])
+S = list(S.values())
+S = np.array(S).tolist()
+for i in range(len(S)):
+    S[i] = S[i][0][0]
+print(S)
+x = [i for i in range(len(S))]
+plt.subplot(2, 1, 1)
+plt.plot(x, S)
+
+D = list(D.values())
+D = np.array(D).tolist()
+for i in range(len(D)):
+    D[i] = D[i][0][0]
+print(D)
+x = [i for i in range(len(D))]
+plt.subplot(2, 1, 2)
+plt.plot(x, D)
+plt.show()
 print("Done")
